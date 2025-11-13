@@ -9,7 +9,7 @@ import (
 
 // 创建一个Server类
 type Server struct {
-	Ip string
+	Ip   string
 	Port int
 
 	// 增加在线用户map
@@ -21,20 +21,19 @@ type Server struct {
 	Message chan string
 }
 
-
 // 创建一个server接口
 func NewServer(ip string, port int) *Server {
 	server := &Server{
-		Ip: ip,
-		Port: port,
+		Ip:        ip,
+		Port:      port,
 		OnlineMap: make(map[string]*User),
-		Message: make(chan string),
+		Message:   make(chan string),
 	}
 	return server
 }
 
 // 监听Message广播消息channel的goroutine，一旦有消息就会发送给所有的在线user
-func (server *Server)ListenMessager()  {
+func (server *Server) ListenMessager() {
 	for {
 		// 监听channel
 		msg := <-server.Message
@@ -61,14 +60,9 @@ func (server *Server) Handler(conn net.Conn) {
 	// fmt.Println("链接建立成功")
 
 	// 用户上线 将用户加入到onlineMap中
-	user := NewUser(conn)
+	user := NewUser(conn, server)
 
-	server.mapLock.Lock()
-	server.OnlineMap[user.Name] = user
-	server.mapLock.Unlock()
-
-	// 广播当前用户上线消息
-	server.BroadCast(user, "is online.\n")
+	user.Online()
 
 	// 接收用户输入信息，将消息进行广播
 	go func() {
@@ -77,10 +71,10 @@ func (server *Server) Handler(conn net.Conn) {
 			n, err := conn.Read(buf)
 			// 关闭客户端请求时触发
 			if n == 0 {
-				server.BroadCast(user, "is not online...")
-				return 
+				user.Offline()
+				return
 			}
-			
+
 			if err != nil && err != io.EOF {
 				fmt.Println("Conn Read Err:", err)
 				return
@@ -88,13 +82,14 @@ func (server *Server) Handler(conn net.Conn) {
 
 			// 提取用户消息 去除\n
 			msg := string(buf[:n-1])
-			// 将得到的消息进行广播
-			server.BroadCast(user, msg)
+			
+			// 用户针对msg进行消息处理
+			user.DoMessage(msg)
 		}
 	}()
 
 	// 当前handler阻塞
-	
+
 }
 
 // 启动服务器的接口
