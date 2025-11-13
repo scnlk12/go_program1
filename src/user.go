@@ -80,6 +80,24 @@ func (user *User) DoMessage(msg string) {
 			user.SendMsg(msg)
 		}
 		user.server.mapLock.Unlock()
+	} else if len(strings.TrimSpace(msg)) > 7 && strings.TrimSpace(msg)[:7] == "rename|" {
+		// 首先获取更新后的名称
+		newName := strings.Split(strings.TrimSpace(msg), "|")[1]
+		// 查询更改后的名称是否已被他人使用
+		_, ok := user.server.OnlineMap[newName]
+		if ok {
+			user.SendMsg("Current name is already in use and cannot be changed!")
+		} else {
+			// 加锁
+			user.server.mapLock.Lock()
+			// 删除OnlineMap中的当前用户
+			delete(user.server.OnlineMap, user.Name)
+			// 更新当前用户的名称
+			user.Name = newName
+			user.server.OnlineMap[newName] = user
+			user.server.mapLock.Unlock()
+			user.SendMsg("Your name has been changed to " + newName + "!\n")
+		}
 	} else {
 		user.server.BroadCast(user, msg)
 	}
