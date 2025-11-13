@@ -1,6 +1,9 @@
 package main
 
-import "net"
+import (
+	"net"
+	"strings"
+)
 
 // 创建User类
 type User struct {
@@ -60,7 +63,24 @@ func (user *User) Offline() {
 	user.server.BroadCast(user, "is offline.\n")
 }
 
+// 给当前user对应的客户端发消息
+func (user *User) SendMsg(msg string) {
+	user.conn.Write([]byte(msg))
+}
+
 // 用户处理消息
 func (user *User) DoMessage(msg string) {
-	user.server.BroadCast(user, msg)
+	// 根据用户输入信息，执行不同的操作
+	if strings.TrimSpace(msg) == "who" {
+		// 加锁
+		user.server.mapLock.Lock()
+		// 遍历在线用户map
+		for _, u := range user.server.OnlineMap {
+			msg := "[" + u.Addr + "]" + u.Name + ": is online.\n"
+			user.SendMsg(msg)
+		}
+		user.server.mapLock.Unlock()
+	} else {
+		user.server.BroadCast(user, msg)
+	}
 }
