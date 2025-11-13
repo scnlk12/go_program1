@@ -86,7 +86,7 @@ func (user *User) DoMessage(msg string) {
 		// 查询更改后的名称是否已被他人使用
 		_, ok := user.server.OnlineMap[newName]
 		if ok {
-			user.SendMsg("Current name is already in use and cannot be changed!")
+			user.SendMsg("Current name is already in use and cannot be changed!\n")
 		} else {
 			// 加锁
 			user.server.mapLock.Lock()
