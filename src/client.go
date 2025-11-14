@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 )
@@ -32,8 +33,25 @@ func NewClient(serverIp string, serverPort int) *Client {
 	return client
 }
 
+// 执行顺序 pkg -> const -> var -> init -> main
+
+// 定义全局变量
+var serverIp string
+var serverPort int
+
+// 优先于main执行
+func init() {
+	// 定义和注册命令行参数
+	flag.StringVar(&serverIp, "ip", "127.0.0.1", "服务器的ip地址")
+	flag.IntVar(&serverPort, "port", 8888, "服务器的端口")
+}
+
 func main() {
-	client := NewClient("127.0.0.1", 8888)
+
+	// 命令行解析 解析命令行参数
+	flag.Parse()
+
+	client := NewClient(serverIp, serverPort)
 	if client == nil {
 		fmt.Println("连接服务器失败")
 		return
