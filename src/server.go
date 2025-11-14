@@ -58,6 +58,8 @@ func (server *Server) BroadCast(user *User, msg string) {
 
 // handler
 func (server *Server) Handler(conn net.Conn) {
+	fmt.Println("链接建立成功")
+
 	// 用户上线 将用户加入到onlineMap中
 	user := NewUser(conn, server)
 
