@@ -72,8 +72,31 @@ func (client *Client) UpdateName() bool {
 	return true
 }
 
+func (client *Client) BroadCast() {
+	// 提示用户输入内容
+	fmt.Println("请输入消息内容, exit表示退出")
+	// 获取用户输入
+	var msg string
+	fmt.Scanln(&msg)
+	// 循环判断 用户输入exit表示退出
+	for msg != "exit" {
+		// 判断内容是否为空
+		if len(msg) != 0 {
+			sendMsg := msg + "\n"
+			_, err := client.conn.Write([]byte(sendMsg))
+			if err != nil {
+				fmt.Println("conn.Write err: ", err)
+				break
+			}
+		}
+		msg = ""
+		fmt.Println("请输入消息内容, exit表示退出")
+		fmt.Scanln(&msg)
+	}
+}
+
 // 处理Server回应的消息，直接显示到标准输出
-func (client *Client) DealResponse()  {
+func (client *Client) DealResponse() {
 	io.Copy(os.Stdout, client.conn)
 }
 
@@ -86,7 +109,7 @@ func (client *Client) Run() {
 		// 根据不同模式处理不同操作
 		switch client.input {
 		case 1:
-			fmt.Println("群聊...")
+			client.BroadCast()
 			break
 		case 2:
 			fmt.Println("私聊...")
