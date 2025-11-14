@@ -98,6 +98,23 @@ func (user *User) DoMessage(msg string) {
 			user.server.mapLock.Unlock()
 			user.SendMsg("Your name has been changed to " + newName + "!\n")
 		}
+	} else if len(strings.TrimSpace(msg)) > 4 && strings.TrimSpace(msg)[:3] == "to|" {
+		// 定义私聊消息格式为 to|zhangsan|content
+		// 获取用户名
+		remoteName := strings.Split(strings.TrimSpace(msg), "|")[1]
+		// 查询当前用户名是否存在
+		remoteUser, ok := user.server.OnlineMap[remoteName]
+		if !ok {
+			user.SendMsg("The user does not exist.\n")
+			return
+		}
+		// 获取消息内容
+		content := strings.Split(strings.TrimSpace(msg), "|")[2]
+		if content == "" {
+			user.SendMsg("Please enter your message.\n")
+			return
+		}
+		remoteUser.SendMsg(user.Name + " has sent a message to you, the content is: " + content + "\n")
 	} else {
 		user.server.BroadCast(user, msg)
 	}
